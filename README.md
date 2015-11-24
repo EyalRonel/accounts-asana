@@ -10,4 +10,4 @@ Login service for Meteor JS using Asana accounts (www.asana.com)
 
 ## Logging in:
 1. Using accounts-ui, a "Login with Asana" button will automatically appear
-2. Or, call `Meteor.loginWithAsana();` directly from you code.
+2. Or, call `Meteor.loginWithAsana();` directly from your code.
