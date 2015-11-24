@@ -1,42 +1,25 @@
-//asanaSDK = Meteor.npmRequire('asana');
+//Include the Asana SDK (available on server side only)
 asanaSDK = Npm.require('asana');
-Meteor.users.allow({
-  update: function (userId, doc, fields, modifier) { 
-    return true; 
-  }
-});
-Asana = {
-  createClient:function(){
-     var config = ServiceConfiguration.configurations.findOne({service: 'asana'});
-     if (!config) {throw new ServiceConfiguration.ConfigError();}
-     var asanaClient =  asanaSDK.Client.create({
-        clientId: config.clientId,
-        clientSecret: config.clientSecret,
-        redirectUri: config.redirectUri
-       });
-    return asanaClient;
-  }
-};
 
+//Declare a Server Side loginWithAsana Method
+//This is function is called as part of the OAuth follow implemented in Meteor
 Meteor.loginWithAsana = function(options, callback) {
-  // support a callback without options
   if (! callback && typeof options === "function") {
     callback = options;
     options = null;
   }
-
   var credentialRequestCompleteCallback = Accounts.oauth.credentialRequestCompleteHandler(callback);
   Asana.requestCredential(options, credentialRequestCompleteCallback);
 };
 
 
-//Triggers once the user returns from 3rd party provider
-//The query argument cotains a "code" field with the access code that we will now convert into a token
+//Triggers once the user returns from Asana
+//query argument cotains a "code" field with an access code that we will now convert into a token.
+//the returned value will be added to the created user records under Meteor.users
 Oauth.registerService('asana', 2, null, function(query) {
   var config = ServiceConfiguration.configurations.findOne({service: 'asana'});
   if (!config) throw new ServiceConfiguration.ConfigError();
   var response = getTokenResponse(query);
-//  var userDetails = getAsanaUserDetails(response.access_token,response.refresh_token);
   return {
     serviceData: {
       id: response.data.id,
@@ -46,32 +29,38 @@ Oauth.registerService('asana', 2, null, function(query) {
     },
     options: {
       profile: { 
-        name: response.data.name
+        name: response.data.name,
+        asana:{}
       },
-      emails:response.data.email
+      emails:response.data.email      
     }
   };
 });
 
-//If a user was created by loggin in with Asana, retrive some additional information from the Asana API and update their profile
+
+//Bind into the onCreateUser method, this is trigger once a new user is created in the system.
+//If the user has the asana service, we query Asana for /user/me endpoint using Asana's JS SDK, and append the returned information into their "profile" fields
+//This information will later be available client side by the return value of "Meteor.user();"
 Accounts.onCreateUser(function(options, user) {
   if (!user.services.hasOwnProperty('asana')) return user;
   if (options.profile) user.profile = options.profile;
   var accessToken = user.services.asana.accessToken;
-  var asanaClient = Asana.createClient().useOauth({credentials:accessToken});
+  var config = ServiceConfiguration.configurations.findOne({service: 'asana'});
+  if (!config) {throw new ServiceConfiguration.ConfigError();}
+  var asanaClient =  asanaSDK.Client.create({clientId: config.clientId,clientSecret: config.clientSecret,redirectUri: config.redirectUri}).useOauth({credentials:accessToken});
   asanaClient.users.me()
     .then(Meteor.bindEnvironment(function(response){
-        options.profile.img = response.photo.image_128x128;
-        options.profile.workspaces =  response.workspaces;
-      Meteor.users.update(user._id, {$set: {"profile": options.profile}});
+      var currenAsanaUserDetails = {
+        photo:response.photo,
+        workspaces: response.workspaces
+      };
+      Meteor.users.update(user._id, {$set: {"profile.asana": currenAsanaUserDetails}});
     }))
     .catch(function(error){
-      console.log('error',error);
+      throw _.extend(new Error("Failed to retrieve user"));
     });
   return user;
 });
-
-
 
 var getTokenResponse = function (query) {
   var config = ServiceConfiguration.configurations.findOne({service: 'asana'});

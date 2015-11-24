@@ -1,22 +1,20 @@
-Asana = {};
-
+//Declare a Client Side loginWithAsana Method
+//This will trigger the client side login flow
 Meteor.loginWithAsana = function(options, callback) {
-  // support a callback without options
   if (! callback && typeof options === "function") {
     callback = options;
     options = null;
   }
-
   var credentialRequestCompleteCallback = Accounts.oauth.credentialRequestCompleteHandler(callback);
   Asana.requestCredential(options, credentialRequestCompleteCallback);
 };
 
+//Called by Meteor.loginWithAsana 
 Asana.requestCredential = function (options, credentialRequestCompleteCallback) {
   if (!credentialRequestCompleteCallback && typeof options === 'function') {
     credentialRequestCompleteCallback = options;
     options = {};
   }
-
   var config = ServiceConfiguration.configurations.findOne({service: 'asana'});
   if (!config) {
     credentialRequestCompleteCallback && credentialRequestCompleteCallback(
