@@ -1,6 +1,6 @@
 Package.describe({
   name: 'eyalronel:accounts-asana',
-  version: '0.0.1',
+  version: '0.0.2',
   summary: 'Login service for Asana accounts (www.asana.com)',
   git: 'https://github.com/EyalRonel/accounts-asana',
   documentation: 'README.md'
@@ -11,6 +11,7 @@ Package.onUse(function(api) {
   api.use('service-configuration', ['client', 'server']);
   api.use('accounts-base', ['client', 'server']);
   api.use('accounts-oauth', ['client', 'server']);
+  api.use('accounts-ui', ['client']);
   api.use('oauth2', ['client', 'server']);
   api.use('oauth', ['client', 'server']);
   api.use('http', ['client', 'server']);
@@ -27,7 +28,7 @@ Npm.depends({
 });
 
 /* 
- * Tests are coming soon :)
+ * Tests are coming soon
 Package.onTest(function(api) {
   api.use('ecmascript');
   api.use('tinytest');
