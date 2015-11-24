@@ -1,13 +1,11 @@
 <template name="configureLoginServiceDialogForAsana">
-    <p>
-        Follow these steps to configure your Asana client:
-    </p>
+    <p>Follow these steps to configure your "Login with Asana":</p>
     <ol>
-        <li>
-            Visit <a href="http://www.asana.com" target="_blank">http://www.asana.com</a>
-        </li>
-        <li>
-            Set Callback URL to: <span class="url">{{siteUrl}}_oauth/asana</span>
-        </li>
+        <li>Visit <a href="http://www.asana.com" target="_blank">http://www.asana.com</a></li>
+        <li>Set up an app under "My Profile Settings" > "Apps" > "Add New Application"</li>
+        <li>Fill in an App Name (this could be anything you want)</li>
+        <li>Set "App Url" to: <span class="url">{{absoluteUrl}}</span></li>
+        <li>Set "Redirect Url" to: <span class="url">{{absoluteUrl}}_oauth/asana</span></li>
+        <li>Once your app is created, you will get a Client ID and Client Secret. paste their values to the fields in the form.</li>
     </ol>
 </template>
